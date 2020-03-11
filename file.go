@@ -17,6 +17,18 @@ func OpenDefault() (f *os.File, err error) {
 	} else if homedir == "" {
 		return
 	}
-	// TODO: check file permission is 0600
-	return os.Open(path.Join(homedir, ".pgpass"))
+
+	path := path.Join(homedir, ".pgpass")
+
+	// info, err := os.Stat(path)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// if perm := uint32(info.Mode().Perm()); perm != 600 {
+	// 	fmt.Println("The permissions for .pgpass must be 600!")
+	// 	os.Exit(1)
+	// }
+
+	return os.Open(path)
 }
