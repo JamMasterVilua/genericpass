@@ -1,6 +1,6 @@
 package standard
 
-import "github.com/jammasterz/genericpass"
+import "github.com/JamMasterVilua/genericpass"
 
 type DirectusPasswordProvider struct {
 	Host string
