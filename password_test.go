@@ -1,4 +1,4 @@
-package pgpass
+package genericpass
 
 import (
 	"bytes"
@@ -7,31 +7,21 @@ import (
 
 func TestPasswordFrom(t *testing.T) {
 	data := `
-localhost:5432:db:root:god123
-*:5000:db:root:god5000
-localhost:1000:db:root:god1000
-localhost:*:db:root:local_god
-localhost:*:db:*:buddy
-*:*:*:*:anything
+localhost:5432:bobbies
+*:5000:dogs
+*:*:coppers
 `
 
 	tests := []struct {
-		host, user, pass string
+		host, port, pass string
 	}{
-		{"localhost:5432", "root", "god123"},
-		{"localhost", "root", "god123"},
-		{"localhost:5000", "root", "god5000"},
-		{"localhost:1000", "root", "god1000"},
-		{"localhost:123", "root", "local_god"},
-		{"localhost:5432", "user", "buddy"},
-		{"otherhost:5432", "root", "anything"},
-
-		{"noport", "root", "anything"},
-		{"", "", "anything"},
+		{"localhost", "5432", "bobbies"},
+		{"localhostess", "5000", "dogs"},
+		{"hosteroni", "5001", "coppers"},
 	}
 
 	for _, tt := range tests {
-		pass, err := PasswordFrom(tt.host, tt.user, bytes.NewBufferString(data))
+		pass, err := PasswordFrom([]string{tt.host, tt.port}, bytes.NewBufferString(data))
 		if err != nil {
 			t.Error(tt, err)
 		}

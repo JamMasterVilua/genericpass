@@ -1,28 +1,40 @@
-package pgpass
+package genericpass
 
 import (
+	"bufio"
+	"fmt"
 	"io"
-	"net/url"
 	"strings"
 )
 
 // PasswordFrom reads password for given host and user from r, which should
 // be in a valid pgpass format. Host should be of the form "hostname:port".
-func PasswordFrom(host, user string, r io.Reader) (string, error) {
-	hp := strings.SplitN(host, ":", 2) // split to hostname:port
-	if len(hp) == 1 {
-		// Add default postgresql port
-		hp = append(hp, "5432")
-	}
+func PasswordFrom(keyParts []string, r io.Reader) (string, error) {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
+		splits := strings.Split(line, ":")
 
-	er := NewEntryReader(r)
-	for er.Next() {
-		e := er.Entry()
-		if eq(hp[0], e.Hostname) && eq(hp[1], e.Port) && eq(user, e.Username) {
-			return e.Password, nil
+		if checkKey(keyParts, splits) {
+			return splits[len(splits)-1], nil
 		}
 	}
-	return "", er.Err()
+
+	return "", fmt.Errorf("no match found")
+}
+
+func checkKey(keyParts, splits []string) bool {
+	if len(keyParts) != len(splits)-1 {
+		return false
+	}
+
+	for index, part := range keyParts {
+		if !eq(part, splits[index]) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func eq(s, pattern string) bool {
@@ -31,34 +43,11 @@ func eq(s, pattern string) bool {
 
 // Password reads password for given host and user from a default pgpass file.
 // Host should be of the form "hostname:port".
-func Password(host, user string) (string, error) {
-	f, err := OpenDefault()
+func Password(fileName string, keyParts []string) (string, error) {
+	f, err := OpenDefault(fileName)
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
-	return PasswordFrom(host, user, f)
-}
-
-// UpdateURL injects password into URL if not already provided.
-// Password will be loaded from the default pgpass file.
-func UpdateURL(dburl string) (string, error) {
-	u, err := url.Parse(dburl)
-	if err != nil {
-		return "", err
-	}
-	if user := u.User; user != nil {
-		if _, ok := user.Password(); !ok {
-			uname := user.Username()
-			pass, err := Password(u.Host, uname)
-			if err != nil {
-				return "", err
-			}
-			if pass != "" {
-				u.User = url.UserPassword(uname, pass)
-			}
-		}
-	}
-
-	return u.String(), nil
+	return PasswordFrom(keyParts, f)
 }
