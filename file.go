@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"runtime"
 )
 
 // OpenDefault opens default pgpass file, which is ~/.pgpass.
@@ -26,7 +27,7 @@ func OpenDefault(fileName string) (f *os.File, err error) {
 		panic(err)
 	}
 
-	if perm := uint32(info.Mode().Perm()); perm != 600 {
+	if perm := uint32(info.Mode().Perm()); runtime.GOOS != "windows" && perm != 600 {
 		fmt.Println("The permissions for .pgpass must be 600!")
 		os.Exit(1)
 	}
