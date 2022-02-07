@@ -20,7 +20,7 @@ func PasswordFrom(keyParts []string, r io.Reader) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("no match found")
+	return "", fmt.Errorf("found no key match for key %+v in the password file", keyParts)
 }
 
 func checkKey(keyParts, splits []string) bool {

@@ -2,6 +2,7 @@ package genericpass
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 )
 
@@ -9,7 +10,7 @@ func TestPasswordFrom(t *testing.T) {
 	data := `
 localhost:5432:bobbies
 *:5000:dogs
-*:*:coppers
+hosteroni:*:coppers
 `
 
 	tests := []struct {
@@ -28,5 +29,10 @@ localhost:5432:bobbies
 		if pass != tt.pass {
 			t.Error(tt, "Wrong password: ", pass)
 		}
+	}
+
+	_, err := PasswordFrom([]string{"telly", "5001"}, bytes.NewBufferString(data))
+	if err == nil || err.Error() != fmt.Sprintf("found no key match for key %+v in the password file", []string{"telly", "5001"}) {
+		t.Error(err)
 	}
 }
